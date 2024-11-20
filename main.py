@@ -52,4 +52,19 @@ def scrape_page(base_url, output_dir):
         
             print(imageLink)
 
+        # Changer le nom du dossier par le nom de la case
+        changer_nom(i, album_name)
+
+
+def changer_nom(i, nom, add=0):
+    try:
+        if add == 0:
+            os.rename(str(i), nom.replace("*", " "))
+        else:
+            os.rename(str(i), nom.replace("*", " ") + " " +str(add))
+    except FileExistsError:  # dossier deja existant
+        changer_nom(i, nom, add+1)
+
+
+
 scrape_page("https://no1factory.x.yupoo.com/albums", "rienpourlinstant")
