@@ -12,7 +12,10 @@ def scrape_page(base_url, output_dir):
     soup = BeautifulSoup(response.text, 'html.parser')
 
     albums = soup.find_all('a', class_='album__main')
+    i = 0
     for album in albums:
+        i = i + 1
+        os.makedirs(str(i), exist_ok=True)
         album_name = album.find('div', class_='text_overflow album__title').text.strip()
         album_link = base_url.replace("/albums", "") + album['href']
 
@@ -26,18 +29,24 @@ def scrape_page(base_url, output_dir):
         imageHolders = soup.find_all('div', class_="image__imagewrap")
 
         # print(imageHolders)
-
+        j = 0
         for imageData in imageHolders:
+            j = j + 1
+            fileDir = str(i) + "/" + str(j) + ".png"
             imageElem = imageData.find('img')
             imageLink = imageElem['data-origin-src']
             imageLink = ("https:") + imageLink
             imageId = imageData.find('div')['data-photoid']
 
-            # response = requests.get(imageLink, stream=True)
-            # response.raise_for_status()
-            # with open('test.jpg', 'wb') as file:
-            #     for chunk in response.iter_content(1024):
-            #         file.write(chunk)
+            headers = {
+                "Referer": base_url
+            }
+
+            response = requests.get(imageLink, stream=True, headers=headers)
+            response.raise_for_status()
+            with open(fileDir, 'wb') as file:
+                for chunk in response.iter_content(1024):
+                    file.write(chunk)
 
             # print("lol")
         
