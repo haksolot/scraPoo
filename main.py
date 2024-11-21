@@ -20,6 +20,25 @@ def scrape_page(base_url, output_dir):
     # Nom artiste
     artist_name = base_url.split(".")[0].replace("https://", "")
 
+    # Infos "Contact"
+    req_contact = requests.get(base_url.replace("/albums", "/contact"))
+    soup_contact = BeautifulSoup(req_contact.text, 'html.parser')
+    contact = soup_contact.find('main').text.strip()
+
+    # Créer le dossier de l'artiste (si existe pas)
+    os.makedirs(artist_name, exist_ok=True)
+
+    # Créer maintenant un fichier data.json contenant les infos de l'artiste
+    data = {
+        "name": artist_name,
+        "contact": contact
+        # Ajouter d'autres infos : nombres albums, etc...
+    }
+
+    # Enregistrer dans un fichier "data.json"
+    with open(f"{artist_name}/data.json", "w+") as file:
+        json.dump(data, file)
+
     albums = soup.find_all('a', class_='album__main')
     i = 0
     for album in albums:
