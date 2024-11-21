@@ -1,6 +1,7 @@
 import os
 import requests
 from bs4 import BeautifulSoup
+import json
 
 def scrape_page(base_url, output_dir):
     catalogue = base_url + "?tab=gallery"
@@ -11,11 +12,40 @@ def scrape_page(base_url, output_dir):
     
     soup = BeautifulSoup(response.text, 'html.parser')
 
+    with open(os.path.join("response.html"), "w", encoding="utf-8") as file:
+        file.write(response.text)
+
+    print(catalogue)
+
+    # Nom artiste
+    artist_name = base_url.split(".")[0].replace("https://", "")
+
+    # Infos "Contact"
+    req_contact = requests.get(base_url.replace("/albums", "/contact"))
+    soup_contact = BeautifulSoup(req_contact.text, 'html.parser')
+    contact = soup_contact.find('main').text.strip()
+
+    # Créer le dossier de l'artiste (si existe pas)
+    os.makedirs(artist_name, exist_ok=True)
+
+    # Créer maintenant un fichier data.json contenant les infos de l'artiste
+    data = {
+        "name": artist_name,
+        "contact": contact
+        # Ajouter d'autres infos : nombres albums, etc...
+    }
+
+    # Enregistrer dans un fichier "data.json"
+    with open(f"{artist_name}/data.json", "w+") as file:
+        json.dump(data, file)
+
     albums = soup.find_all('a', class_='album__main')
     i = 0
     for album in albums:
         i = i + 1
-        os.makedirs(str(i), exist_ok=True)
+        # Créer maintenant le dossier de l'album (stocké dans le dossier de l'artiste)
+        os.makedirs(f"{artist_name}/{str(i)}", exist_ok=True)
+
         album_name = album.find('div', class_='text_overflow album__title').text.strip()
         album_link = base_url.replace("/albums", "") + album['href']
 
@@ -32,7 +62,10 @@ def scrape_page(base_url, output_dir):
         j = 0
         for imageData in imageHolders:
             j = j + 1
-            fileDir = str(i) + "/" + str(j) + ".png"
+            # Les images sont maintenant stockées dans "{artist_name}/{str(i)}"
+            # (et non "str(i)")
+            fileDir = f"{artist_name}/{str(i)}/{str(j)}.png"
+
             imageElem = imageData.find('img')
             imageLink = imageElem['data-origin-src']
             imageLink = ("https:") + imageLink
@@ -51,5 +84,20 @@ def scrape_page(base_url, output_dir):
             # print("lol")
         
             print(imageLink)
+
+        # Changer le nom du dossier par le nom de la case (plus nécessaire)
+        # changer_nom(i, album_name)
+
+
+def changer_nom(i, nom, add=0):
+    try:
+        if add == 0:
+            os.rename(str(i), nom.replace("*", " "))
+        else:
+            os.rename(str(i), nom.replace("*", " ") + " " +str(add))
+    except FileExistsError:  # dossier deja existant
+        changer_nom(i, nom, add+1)
+
+
 
 scrape_page("https://no1factory.x.yupoo.com/albums", "rienpourlinstant")
