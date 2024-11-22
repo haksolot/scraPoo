@@ -12,13 +12,14 @@ def scrape_page(base_url, output_dir):
     
     soup = BeautifulSoup(response.text, 'html.parser')
 
-    with open(os.path.join("response.html"), "w", encoding="utf-8") as file:
-        file.write(response.text)
+    # with open(os.path.join("response.html"), "w", encoding="utf-8") as file:
+    #     file.write(response.text)
 
-    print(catalogue)
+    # print(catalogue)
 
-    # Nom artiste
-    artist_name = base_url.split(".")[0].replace("https://", "")
+    # seller_name = base_url.split(".")[0].replace("https://", "")
+    seller_name = soup.find('h1', class_='showheader__nickname').text.strip()
+    print(seller_name)
 
     # Infos "Contact"
     req_contact = requests.get(base_url.replace("/albums", "/contact"))
@@ -26,17 +27,17 @@ def scrape_page(base_url, output_dir):
     contact = soup_contact.find('main').text.strip()
 
     # Créer le dossier de l'artiste (si existe pas)
-    os.makedirs(artist_name, exist_ok=True)
+    os.makedirs(seller_name, exist_ok=True)
 
     # Créer maintenant un fichier data.json contenant les infos de l'artiste
     data = {
-        "name": artist_name,
+        "name": seller_name,
         "contact": contact
         # Ajouter d'autres infos : nombres albums, etc...
     }
 
     # Enregistrer dans un fichier "data.json"
-    with open(f"{artist_name}/data.json", "w+") as file:
+    with open(f"{seller_name}/data.json", "w+") as file:
         json.dump(data, file)
 
     albums = soup.find_all('a', class_='album__main')
@@ -44,7 +45,7 @@ def scrape_page(base_url, output_dir):
     for album in albums:
         i = i + 1
         # Créer maintenant le dossier de l'album (stocké dans le dossier de l'artiste)
-        os.makedirs(f"{artist_name}/{str(i)}", exist_ok=True)
+        os.makedirs(f"{seller_name}/{str(i)}", exist_ok=True)
 
         album_name = album.find('div', class_='text_overflow album__title').text.strip()
         album_link = base_url.replace("/albums", "") + album['href']
@@ -64,7 +65,7 @@ def scrape_page(base_url, output_dir):
             j = j + 1
             # Les images sont maintenant stockées dans "{artist_name}/{str(i)}"
             # (et non "str(i)")
-            fileDir = f"{artist_name}/{str(i)}/{str(j)}.png"
+            fileDir = f"{seller_name}/{str(i)}/{str(j)}.png"
 
             imageElem = imageData.find('img')
             imageLink = imageElem['data-origin-src']
