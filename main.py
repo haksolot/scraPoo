@@ -3,6 +3,8 @@ import requests
 from bs4 import BeautifulSoup
 import json
 
+
+
 def scrape_page(base_url, output_dir):
     catalogue = base_url + "?tab=gallery"
     response = requests.get(catalogue)
@@ -12,16 +14,9 @@ def scrape_page(base_url, output_dir):
     
     soup = BeautifulSoup(response.text, 'html.parser')
 
-    # with open(os.path.join("response.html"), "w", encoding="utf-8") as file:
-    #     file.write(response.text)
-
-    # print(catalogue)
-
-    # seller_name = base_url.split(".")[0].replace("https://", "")
     seller_name = soup.find('h1', class_='showheader__nickname').text.strip()
     print(seller_name)
 
-    # Infos "Contact"
     req_contact = requests.get(base_url.replace("/albums", "/contact"))
     soup_contact = BeautifulSoup(req_contact.text, 'html.parser')
     contact = soup_contact.find('main').text.strip()
