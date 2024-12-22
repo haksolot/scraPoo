@@ -18,9 +18,10 @@ parser.add_argument(
 args = parser.parse_args()
 
 def main():
+    
     seller_infos = scrape_seller_infos(args.link)
     write_seller_infos(seller_infos, args.output_dir)
-    scrape_albums(args.link, args.output_dir + "/" + sanitize_filename(seller_infos['name']))
+    scrape_pages(args.link, args.output_dir + "/" + sanitize_filename(seller_infos['name']))
     
 if __name__ == "__main__":
     main()

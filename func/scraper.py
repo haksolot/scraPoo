@@ -21,17 +21,30 @@ def write_seller_infos(infos, path):
     with open(path + "/" + sanitize_filename(infos['name']) + "/" + "seller_infos.json", "w") as file:
         json.dump(infos, file, indent=4) 
 
-def scrape_albums(base_url, output_dir):
-    catalogue = base_url + "/albums?tab=gallery"
-    response = requests.get(catalogue)
+def scrape_pages(base_url, output_dir):
+    response = requests.get(base_url + "/albums")
+    if response.status_code != 200:
+        print(f"Error trying to get sellers Yupoo page: ({response.status_code})")
+        return
+    soup = BeautifulSoup(response.text, 'html.parser')
+    pageJpr = soup.find('form', class_="pagination__jumpwrap")
+    pageNbr = pageJpr.find('input')['max']
+    for i in range(1, int(pageNbr) + 1):
+        scrape_albums(base_url, base_url + "/albums?page=" + str(i), output_dir)
+    print(pageNbr)
+
+def scrape_albums(base_url, page_url, output_dir):
+    response = requests.get(page_url)
     if response.status_code != 200:
         print(f"Error trying to get sellers Yupoo page: ({response.status_code})")
         return
     soup = BeautifulSoup(response.text, 'html.parser')
     albums = soup.find_all('div', class_='showindex__children')
-
     for album in albums:
         album_name = album.find('div', class_='text_overflow album__title').text.strip()
+        if(os.path.exists(os.path.join(output_dir, sanitize_filename(album_name)))):
+            print(f"{album_name} already exists")
+            continue
         album_link = base_url + album.find('a', class_='album__main')['href']
         album_image_number = album.find('div', class_='text_overflow album__photonumber').text.strip()
         info_obj = {
